@@ -1,24 +1,33 @@
 package edu.cnm.deepdive.codebreaker.model.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Transient;
 import java.time.Instant;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 
+@SuppressWarnings("JpaDataSourceORMInspection")
 @Entity
+@Table(name = "user_profile")
 public class User {
 
   @Id
   @GeneratedValue
   @Column(name = "user_profile_id", updatable = false)
-  private long id;
+  private Long id;
 
   @Column(nullable = false, updatable = false, unique = true)
   private UUID externalKey;
@@ -38,7 +47,14 @@ public class User {
   @Temporal(TemporalType.TIMESTAMP)
   private Instant accessed;
 
-  public long getId() {
+  @OneToMany(
+      mappedBy = "player", fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL, orphanRemoval = true
+  )
+  @OrderBy("created DESC")
+  private final List<Game> games = new LinkedList<>();
+
+  public Long getId() {
     return id;
   }
 
@@ -74,8 +90,12 @@ public class User {
     this.accessed = accessed;
   }
 
+  public List<Game> getGames() {
+    return games;
+  }
+
   @PrePersist
-  void setExternalKey() {
+  void generateFieldValues() {
     externalKey = UUID.randomUUID();
   }
 
