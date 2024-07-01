@@ -15,9 +15,12 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -51,6 +54,8 @@ public class Game {
   private int poolSize;
 
   @Column(nullable = false, updatable = false)
+  @Min(2)
+  @Max(12)
   private int codeLength;
 
   @Column(nullable = false, updatable = false)
@@ -129,6 +134,23 @@ public class Game {
         && guesses.getLast().isSolution();
   }
 
+  @Override
+  public int hashCode() {
+    return (id != null) ? id.hashCode() : 0;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    boolean result;
+    if (obj == this) {
+      result = true;
+    } else if (obj instanceof Game other) {
+      result = this.id != null && this.id.equals(other.id);
+    } else {
+      result = false;
+    }
+    return result;
+  }
 
   @PrePersist
   void generateFieldValues() {
