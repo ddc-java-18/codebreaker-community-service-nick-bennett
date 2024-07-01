@@ -1,5 +1,11 @@
 package edu.cnm.deepdive.codebreaker.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,6 +37,8 @@ import org.hibernate.annotations.CreationTimestamp;
         @Index(columnList = "pool_size, code_length")
     }
 )
+@JsonInclude(Include.NON_NULL)
+@JsonPropertyOrder({"key", "created", "pool", "codeLength", "solved", "secretCode", "guesses"})
 public class Game {
 
   public static final int MAX_CODE_LENGTH = 20;
@@ -38,19 +46,23 @@ public class Game {
   @Id
   @GeneratedValue
   @Column(nullable = false, updatable = false)
+  @JsonIgnore
   private Long id;
 
   @Column(nullable = false, updatable = false, unique = true)
+  @JsonProperty(value = "key", access = Access.READ_ONLY)
   private UUID externalKey;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "player_id", nullable = false, updatable = false)
+  @JsonIgnore
   private User player;
 
   @Column(nullable = false, updatable = false, length = MAX_CODE_LENGTH)
   private String pool;
 
   @Column(nullable = false, updatable = false)
+  @JsonIgnore
   private int poolSize;
 
   @Column(nullable = false, updatable = false)
@@ -59,11 +71,13 @@ public class Game {
   private int codeLength;
 
   @Column(nullable = false, updatable = false)
+  @JsonIgnore
   private String secretCode;
 
   @Column(nullable = false, updatable = false)
   @Temporal(TemporalType.TIMESTAMP)
   @CreationTimestamp
+  @JsonProperty(access = Access.READ_ONLY)
   private Instant created;
 
   @OneToMany(
@@ -71,6 +85,7 @@ public class Game {
       cascade = CascadeType.ALL, orphanRemoval = true
   )
   @OrderBy("created ASC")
+  @JsonProperty(access = Access.READ_ONLY)
   private final List<Guess> guesses = new LinkedList<>();
 
   public Long getId() {
@@ -132,6 +147,11 @@ public class Game {
     List<Guess> guesses = getGuesses();
     return !guesses.isEmpty()
         && guesses.getLast().isSolution();
+  }
+
+  @JsonProperty(value = "secretCode")
+  public String getCode() {
+    return isSolved() ? secretCode : null;
   }
 
   @Override
