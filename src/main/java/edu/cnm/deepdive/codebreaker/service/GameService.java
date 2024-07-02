@@ -9,9 +9,13 @@ import edu.cnm.deepdive.codebreaker.service.exception.GameAlreadySolvedException
 import edu.cnm.deepdive.codebreaker.service.exception.InvalidGuessCharacterException;
 import edu.cnm.deepdive.codebreaker.service.exception.InvalidGuessLengthException;
 import edu.cnm.deepdive.codebreaker.service.exception.InvalidPoolException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 import java.util.random.RandomGenerator;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.web.embedded.TomcatVirtualThreadsWebServerFactoryCustomizer;
 import org.springframework.stereotype.Service;
@@ -94,8 +98,8 @@ public class GameService implements AbstractGameService {
   private static void validateCodePoint(int codePoint) throws InvalidPoolException {
     if (
         Character.isWhitespace(codePoint)
-        || Character.isISOControl(codePoint)
-        || !Character.isDefined(codePoint)
+            || Character.isISOControl(codePoint)
+            || !Character.isDefined(codePoint)
     ) {
       throw new InvalidPoolException();
     }
@@ -113,11 +117,52 @@ public class GameService implements AbstractGameService {
   private static void validateGuess(Game game, Guess guess)
       throws InvalidGuessCharacterException, InvalidGuessLengthException,
       GameAlreadySolvedException {
-    throw new UnsupportedOperationException();
+    if (game.isSolved()) {
+      throw new GameAlreadySolvedException();
+    }
+    String code = guess.getCode();
+    int guessLength = (int) code
+        .codePoints()
+        .count();
+    if (guessLength != game.getCodeLength()) {
+      throw new InvalidGuessLengthException();
+    }
+    Set<Integer> poolCodePointSet = game
+        .getPool()
+        .codePoints()
+        .boxed()
+        .collect(Collectors.toSet());
+    if (!poolCodePointSet.containsAll(code.codePoints().boxed().toList())) {
+      throw new InvalidGuessCharacterException();
+    }
   }
 
   private static void evaluateGuess(Game game, Guess guess) {
-    throw new UnsupportedOperationException();
+    int correct = 0;
+    int[] secretCodePoints = codePoints(game.getSecretCode());
+    int[] guessCodePoints = codePoints(guess.getCode());
+    Map<Integer, Integer> secretCodePointCounts = new HashMap<>();
+    Map<Integer, Integer> guessCodePointCounts = new HashMap<>();
+    for (int i = 0; i < secretCodePoints.length; i++) {
+      int secretCodePoint = secretCodePoints[i];
+      int guessCodePoint = guessCodePoints[i];
+      if (secretCodePoint == guessCodePoint) {
+        correct++;
+      } else {
+        secretCodePointCounts.put(
+            secretCodePoint, 1 + secretCodePointCounts.getOrDefault(secretCodePoint, 0));
+        guessCodePointCounts.put(
+            guessCodePoint, 1 + guessCodePointCounts.getOrDefault(guessCodePoint, 0));
+      }
+    }
+    guess.setCorrect(correct);
+    int close = secretCodePointCounts
+        .entrySet()
+        .stream()
+        .mapToInt((entry) ->
+            Math.min(entry.getValue(), guessCodePointCounts.getOrDefault(entry.getKey(), 0)))
+            .sum();
+    guess.setClose(close);
   }
 
 }
