@@ -17,7 +17,6 @@ import java.util.UUID;
 import java.util.random.RandomGenerator;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.web.embedded.TomcatVirtualThreadsWebServerFactoryCustomizer;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,16 +25,13 @@ public class GameService implements AbstractGameService {
   private final GameRepository gameRepository;
   private final GuessRepository guessRepository;
   private final RandomGenerator rng;
-  private final TomcatVirtualThreadsWebServerFactoryCustomizer tomcatVirtualThreadsProtocolHandlerCustomizer;
 
   @Autowired
   public GameService(
-      GameRepository gameRepository, GuessRepository guessRepository, RandomGenerator rng,
-      TomcatVirtualThreadsWebServerFactoryCustomizer tomcatVirtualThreadsProtocolHandlerCustomizer) {
+      GameRepository gameRepository, GuessRepository guessRepository, RandomGenerator rng) {
     this.gameRepository = gameRepository;
     this.guessRepository = guessRepository;
     this.rng = rng;
-    this.tomcatVirtualThreadsProtocolHandlerCustomizer = tomcatVirtualThreadsProtocolHandlerCustomizer;
   }
 
   @Override
