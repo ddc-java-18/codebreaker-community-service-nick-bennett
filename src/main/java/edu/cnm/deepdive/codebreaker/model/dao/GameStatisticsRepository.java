@@ -1,10 +1,11 @@
 package edu.cnm.deepdive.codebreaker.model.dao;
 
 import edu.cnm.deepdive.codebreaker.model.entity.GameStatistics;
+import edu.cnm.deepdive.codebreaker.model.pojo.GameStatisticsKey;
 import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 
-public interface GameStatisticsRepository extends ReadOnlyRepository<GameStatistics, Long> {
+public interface GameStatisticsRepository extends ReadOnlyRepository<GameStatistics, GameStatisticsKey> {
 
   String NO_THRESHOLD_QUERY = """
       SELECT
