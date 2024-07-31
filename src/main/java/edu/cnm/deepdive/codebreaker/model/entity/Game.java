@@ -46,7 +46,7 @@ public class Game {
 
   @Id
   @GeneratedValue
-  @Column(nullable = false, updatable = false)
+  @Column(name = "game_id", nullable = false, updatable = false)
   @JsonIgnore
   private Long id;
 
